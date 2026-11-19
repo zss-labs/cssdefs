@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import ts from 'typescript';
 
 const file = path.join(import.meta.dirname, '..', 'index.d.ts');
+const changes = path.join(import.meta.dirname, '..', 'changes.json');
 
 const read = (text: string) => {
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
@@ -64,30 +65,46 @@ if (previous === current) {
 } else {
   const before = read(previous);
   const after = read(current);
+  type Change = { property: string; values: string[] };
   const missing = (
     from: Map<string, Set<string>>,
     to: Map<string, Set<string>>,
   ) => {
-    const result: string[] = [];
-    for (const [name, values] of from) {
-      const other = to.get(name);
+    const result: Change[] = [];
+    for (const [property, values] of from) {
+      const other = to.get(property);
       if (!other) {
-        result.push(name);
+        result.push({ property, values: [] });
         continue;
       }
-      for (const value of values) {
-        if (!other.has(value)) result.push(`${name}: ${value}`);
-      }
+      const gone = [...values].filter((value) => !other.has(value));
+      if (gone.length > 0) result.push({ property, values: gone });
     }
     return result;
   };
+  const describe = (changes: Change[]) =>
+    changes
+      .map(({ property, values }) =>
+        values.length ? `${property}: ${values.join(', ')}` : property,
+      )
+      .join('; ');
   const removed = missing(before, after);
   const added = missing(after, before);
+  if (removed.length > 0 || added.length > 0) {
+    fs.writeFileSync(
+      changes,
+      `${JSON.stringify(
+        { date: new Date().toISOString().slice(0, 10), added, removed },
+        null,
+        2,
+      )}\n`,
+    );
+  }
   if (removed.length > 0) {
-    console.error(`Removed: ${removed.join(', ')}`);
+    console.error(`Removed: ${describe(removed)}`);
     console.log('minor');
   } else if (added.length > 0) {
-    console.error(`Added: ${added.join(', ')}`);
+    console.error(`Added: ${describe(added)}`);
     console.log('patch');
   } else {
     console.log('none');
