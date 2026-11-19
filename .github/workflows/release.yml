@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  schedule:
+    - cron: '0 0 * * 5'
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - package.json
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-node
+
+      - name: Update the MDN and webref data
+        run: pnpm update --latest mdn-data @mdn/browser-compat-data @webref/css css-tree
+
+      - name: Regenerate the types
+        run: pnpm generate
+
+      - name: Decide the version bump
+        id: bump
+        run: echo "level=$(pnpm --silent bump)" >> "$GITHUB_OUTPUT"
+
+      - name: Type-check
+        if: steps.bump.outputs.level != 'none'
+        run: pnpm typecheck
+
+      - name: Commit each file and push
+        if: steps.bump.outputs.level != 'none'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          npm version ${{ steps.bump.outputs.level }} --no-git-tag-version
+          commit() {
+            if ! git diff --quiet -- "$1"; then
+              git add "$1"
+              git commit -m "$2"
+            fi
+          }
+          commit pnpm-lock.yaml 'chore: update the MDN and webref data in pnpm-lock.yaml'
+          commit index.d.ts 'chore: regenerate the CSS types in index.d.ts'
+          commit package.json "chore: release $(node -p "require('./package.json').version") in package.json"
+          git push
+
+      - name: Publish to npm
+        if: steps.bump.outputs.level != 'none'
+        run: npm publish
+
+  publish:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-node
+
+      - name: Publish when the version is new
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          if npm view "$name@$version" version >/dev/null 2>&1; then
+            echo "$name@$version is already published"
+          else
+            pnpm typecheck
+            npm publish
+          fi

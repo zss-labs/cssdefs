@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-node
+
+      - name: Regenerate the types
+        run: pnpm generate
+
+      - name: Check that index.d.ts is up to date
+        run: git diff --exit-code -- index.d.ts
+
+      - name: Type-check
+        run: pnpm typecheck

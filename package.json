@@ -1,0 +1,47 @@
+{
+  "name": "cssdefs",
+  "version": "1.0.0",
+  "description": "TypeScript types for every CSS property, regenerated weekly from MDN and webref",
+  "license": "MIT",
+  "author": "zss-labs",
+  "homepage": "https://github.com/zss-labs/cssdefs#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zss-labs/cssdefs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zss-labs/cssdefs/issues"
+  },
+  "keywords": [
+    "css",
+    "css-properties",
+    "csstype",
+    "definitions",
+    "mdn",
+    "types",
+    "typescript",
+    "typings"
+  ],
+  "types": "index.d.ts",
+  "files": [
+    "index.d.ts"
+  ],
+  "scripts": {
+    "generate": "node scripts/generate.mts",
+    "typecheck": "tsc --noEmit --strict index.d.ts",
+    "bump": "node scripts/bump.mts"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "devDependencies": {
+    "@mdn/browser-compat-data": "^8.1.9",
+    "@types/node": "^26.6.6",
+    "@webref/css": "^8.7.9",
+    "css-tree": "^3.2.1",
+    "mdn-data": "^2.37.2",
+    "prettier": "^3.10.1",
+    "typescript": "^6.0.3"
+  }
+}
