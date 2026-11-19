@@ -54,6 +54,7 @@ jobs:
           }
           commit pnpm-lock.yaml 'chore: update the MDN and webref data in pnpm-lock.yaml'
           commit index.d.ts 'chore: regenerate the CSS types in index.d.ts'
+          commit changes.json 'chore: record the type changes in changes.json'
           commit package.json "chore: release $(node -p "require('./package.json').version") in package.json"
           git push
 
