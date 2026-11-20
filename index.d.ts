@@ -300,11 +300,9 @@ type SingleAnimationDirection =
 type SingleAnimationFillMode = 'none' | 'forwards' | 'backwards' | 'both';
 type TextEdge =
   | 'text'
-  | 'cap'
-  | 'ex'
   | 'ideographic'
   | 'ideographic-ink'
-  | `${'text' | 'cap' | 'ex' | 'ideographic' | 'ideographic-ink'} ${'text' | 'alphabetic' | 'ideographic' | 'ideographic-ink'}`;
+  | `${'text' | 'ideographic' | 'ideographic-ink' | 'cap' | 'ex'} ${'text' | 'ideographic' | 'ideographic-ink' | 'alphabetic'}`;
 type TimelineRangeName =
   'cover' | 'contain' | 'entry' | 'exit' | 'entry-crossing' | 'exit-crossing';
 type TrackBreadth = 'min-content' | 'max-content' | 'auto';
