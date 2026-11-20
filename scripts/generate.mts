@@ -175,13 +175,16 @@ const aliases = new Map<string, Values>();
 let owner = '';
 
 const excludedTypes = new Set(['system-color', 'deprecated-system-color']);
+const webrefFirstTypes = new Set(['text-edge']);
 
 const expandType = (name: string, visiting: Set<string>): Values => {
   if (excludedTypes.has(name)) {
     return { values: new Set(), open: false, numeric: false, optional: false };
   }
   if (numericTypes.has(name)) return open(true);
-  const definition = syntaxes[name] ?? webrefTypes.get(name);
+  const definition = webrefFirstTypes.has(name)
+    ? (webrefTypes.get(name) ?? syntaxes[name])
+    : (syntaxes[name] ?? webrefTypes.get(name));
   if (!definition || visiting.has(name)) return open();
   if (!usage.has(name)) usage.set(name, new Set());
   usage.get(name)!.add(owner);
